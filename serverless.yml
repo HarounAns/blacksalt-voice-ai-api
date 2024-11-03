@@ -1,0 +1,75 @@
+service: pam-blacksalt-api
+frameworkVersion: '3'
+
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs18.x
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - '*'
+      allowedMethods: #by default patch requests are not allowed, you need to do *
+        - '*'
+  environment:
+    DYNAMODB_TABLE: blacksalt
+    RETELL_API_KEY: ${env:RETELL_API_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+          Resource: arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.DYNAMODB_TABLE}
+
+package:
+  exclude:
+    - client/**
+
+functions:
+  twilioWebhook:
+    handler: twilio-webhook.handler
+    events:
+      - httpApi:
+          path: /twilio-webhook
+          method: post
+
+  retellInboundWebhook:
+    handler: retell-inbound-webhook.handler
+    events:
+      - httpApi:
+          path: /retell-inbound-webhook
+          method: post
+
+  auth:
+    handler: auth.handler
+    events:
+      - httpApi:
+          path: /auth
+          method: post
+
+  listCalls:
+    handler: listCalls.handler
+    environment:
+      RETELL_AGENT_ID: ${env:RETELL_AGENT_ID}
+    events:
+      - httpApi:
+          path: /calls
+          method: post
+
+  getConfig:
+    handler: getConfig.handler
+    events:
+      - httpApi:
+          path: /config
+          method: get
+
+  updateConfig:
+    handler: updateConfig.handler
+    events:
+      - httpApi:
+          path: /config
+          method: patch
