@@ -17,22 +17,39 @@ const formatResponse = (statusCode, body, contentType = 'application/json') => (
 });
 
 function getCurrentDayName() {
+  // Convert UTC to EST
+  const estTime = new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York"  // EST timezone
+  });
+  const estDate = new Date(estTime);
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayIndex = new Date().getDay();
-  return days[dayIndex];
+  return days[estDate.getDay()];
 }
 
 function parseTimeString(timeStr) {
   const [hours, minutes] = timeStr.split(':').map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date;
+  // Create date in EST
+  const estTime = new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York"
+  });
+  const estDate = new Date(estTime);
+  estDate.setHours(hours, minutes, 0, 0);
+  return estDate;
 }
 
 function isStoreOpen(hours) {
+  // Add debug logging
+  console.log('UTC time:', new Date().toISOString());
+  console.log('EST time:', new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+  
   if (!hours) return false;
   
-  const now = new Date();
+  // Get current time in EST
+  const estTime = new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York"
+  });
+  const now = new Date(estTime);
+  
   const currentDay = getCurrentDayName();
   const todayHours = hours[currentDay];
   
