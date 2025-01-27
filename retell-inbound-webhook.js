@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { createFAQString } = require("./util");
+const { createFAQString, createOpenStatusString } = require("./util");
 const { formatResponse } = require('./util');
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
@@ -28,8 +28,9 @@ module.exports.handler = async (event) => {
 
         const config = await getConfig();
         const faqString = createFAQString(config.FAQ);
+        const isOpenRightNow = createOpenStatusString(config.HOURS);
 
-        return formatResponse(200, { faqString });
+        return formatResponse(200, { faqString, isOpenRightNow });
     } catch (error) {
         console.error('Error processing Retell webhook:', error);
         return formatResponse(500, { error: 'Internal Server Error' });
